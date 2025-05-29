@@ -36,13 +36,15 @@
         }
     </style>
 </head>
-<body>
+<body id="MainBody">
     <div id="toolbar">
         <button id="drawButton">Draw</button>
         <button id="textButton">Add Text</button>
         <button id="clearButton">Clear</button>
         <button id="eraserButton">Eraser</button>
         <button id="addImageBtn">Add Image</button>
+        <button id="saveAsImageButton">Save as Image</button>
+        <button id="saveAsPDFButton">Save as PDF</button>
         <input type="color" id="colorPicker" value="#000000">
         <input type="range" id="lineWidth" min="1" max="50" value="2">
         <input type="file" id="imageUpload" accept="image/*">
@@ -52,8 +54,13 @@
     </div>
     <div>
         @RenderBody()
+        
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
+
+        
+
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
         const drawButton = document.getElementById("drawButton");
@@ -61,6 +68,8 @@
         const clearButton = document.getElementById("clearButton");
         const eraserButton = document.getElementById("eraserButton");
         const addImageBtn = document.getElementById("addImageBtn");
+        const saveAsImageButton = document.getElementById("saveAsImageButton");
+        const saveAsPDFButton = document.getElementById("saveAsPDFButton");
         const colorPicker = document.getElementById("colorPicker");
         const lineWidth = document.getElementById("lineWidth");
         const imageUpload = document.getElementById("imageUpload");
@@ -218,6 +227,25 @@
 
         addImageBtn.addEventListener("click", () => {
             imageUpload.click();
+        });
+
+        saveAsImageButton.addEventListener("click", () => {
+            const element = document.getElementById('MainBody');
+        });
+
+        saveAsPDFButton.addEventListener("click", () => {
+            const element = document.getElementById('MainBody');
+            const formattedDate = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+            const options = {
+                margin: 0,
+                filename: 'FileName_' + formattedDate + '.pdf',
+                image: { type: 'jpeg', quality: 1.0 },
+                html2canvas: { scale: 1 },
+                jsPDF: { unit: 'mm', format: [297, 420], orientation: 'landscape' },
+                innerWidth: window.innerWidth,
+                innerHeight: window.innerHeight - document.getElementById('toolbar').offsetHeight
+            };
+            html2pdf(element, options);
         });
 
         colorPicker.addEventListener("input", () => {
@@ -454,6 +482,9 @@
         ctx.lineJoin = 'round';
         setupCanvas();
         window.addEventListener('resize', setupCanvas);
+
+                
     </script>
 </body>
 </html>
+
