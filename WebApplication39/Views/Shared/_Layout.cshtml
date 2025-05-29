@@ -1,23 +1,7 @@
-﻿<!--<!DOCTYPE html>
-
-<html>
+﻿<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width" />
     <title>@ViewBag.Title</title>
-</head>
-<body>
-    <div>
-        <a href="/Home/About">About</a> | <a href="/Home/Index">Index</a>
-    </div>
-    <div>
-        @RenderBody()
-    </div>
-</body>
-</html>
--->
-<html lang="en">
-<head>
-    <title>Miro-like Canvas</title>
     <style>
         body {
             margin: 0;
@@ -66,7 +50,9 @@
     <div id="canvas-container">
         <canvas id="canvas"></canvas>
     </div>
-
+    <div>
+        @RenderBody()
+    </div>
     <script>
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
