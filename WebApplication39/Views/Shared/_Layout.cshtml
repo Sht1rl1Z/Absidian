@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿<!--<!DOCTYPE html>
 
 <html>
 <head>
@@ -12,5 +12,462 @@
     <div>
         @RenderBody()
     </div>
+</body>
+</html>
+-->
+<html lang="en">
+<head>
+    <title>Miro-like Canvas</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #toolbar {
+            padding: 10px;
+            background-color: #f0f0f0;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        #canvas-container {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        #canvas {
+            background-color: white;
+            display: block;
+            position: absolute;
+        }
+        #imageUpload {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="toolbar">
+        <button id="drawButton">Draw</button>
+        <button id="textButton">Add Text</button>
+        <button id="clearButton">Clear</button>
+        <button id="eraserButton">Eraser</button>
+        <button id="addImageBtn">Add Image</button>
+        <input type="color" id="colorPicker" value="#000000">
+        <input type="range" id="lineWidth" min="1" max="50" value="2">
+        <input type="file" id="imageUpload" accept="image/*">
+    </div>
+    <div id="canvas-container">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const drawButton = document.getElementById("drawButton");
+        const textButton = document.getElementById("textButton");
+        const clearButton = document.getElementById("clearButton");
+        const eraserButton = document.getElementById("eraserButton");
+        const addImageBtn = document.getElementById("addImageBtn");
+        const colorPicker = document.getElementById("colorPicker");
+        const lineWidth = document.getElementById("lineWidth");
+        const imageUpload = document.getElementById("imageUpload");
+
+        let isDrawing = false;
+        let currentTool = 'pen';
+        let images = [];
+        let drawings = [];
+        let texts = [];
+        let selectedImageIndex = -1;
+        let isDraggingImage = false;
+        let startX = 0;
+        let startY = 0;
+        let offsetX = 0;
+        let offsetY = 0;
+        let currentText = null;
+
+        class CanvasImage {
+            constructor(img, x = 0, y = 0, scale = 1.0) {
+                this.img = img;
+                this.x = x;
+                this.y = y;
+                this.scale = scale;
+                this.width = img.width;
+                this.height = img.height;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.scale(this.scale, this.scale);
+                ctx.drawImage(this.img, 0, 0);
+                ctx.restore();
+            }
+
+            containsPoint(x, y) {
+                const scaledWidth = this.width * this.scale;
+                const scaledHeight = this.height * this.scale;
+                return x >= this.x && x <= this.x + scaledWidth &&
+                       y >= this.y && y <= this.y + scaledHeight;
+            }
+        }
+
+        class Drawing {
+            constructor(points, color, width, tool) {
+                this.points = points;
+                this.color = color;
+                this.width = width;
+                this.tool = tool;
+            }
+
+            draw(ctx) {
+                if (this.points.length < 2) return;
+
+                ctx.save();
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = this.width;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                if (this.tool === 'eraser') {
+                    ctx.globalCompositeOperation = 'destination-out';
+                } else {
+                    ctx.globalCompositeOperation = 'source-over';
+                }
+
+                ctx.beginPath();
+                ctx.moveTo(this.points[0].x, this.points[0].y);
+                for (let i = 1; i < this.points.length; i++) {
+                    ctx.lineTo(this.points[i].x, this.points[i].y);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        class Text {
+            constructor(content, x, y, color, size) {
+                this.content = content;
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = size;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.fillStyle = this.color;
+                ctx.font = `${this.size}px Arial`;
+                ctx.fillText(this.content, this.x, this.y);
+                ctx.restore();
+            }
+        }
+
+        function setupCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight - document.getElementById('toolbar').offsetHeight;
+            redrawCanvas();
+        }
+
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw all images first
+            images.forEach(img => img.draw(ctx));
+
+            // Then draw all drawings
+            drawings.forEach(drawing => drawing.draw(ctx));
+
+            // Finally draw all texts
+            texts.forEach(text => text.draw(ctx));
+        }
+
+        function addImage(imgSrc) {
+            const img = new Image();
+            img.onload = function() {
+                const canvasImg = new CanvasImage(
+                    img,
+                    (canvas.width - img.width) / 2,
+                    (canvas.height - img.height) / 2
+                );
+                images.push(canvasImg);
+                selectedImageIndex = images.length - 1;
+                redrawCanvas();
+            };
+            img.src = imgSrc;
+        }
+
+        // Toolbar event listeners
+        drawButton.addEventListener("click", () => {
+            currentTool = 'pen';
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.strokeStyle = colorPicker.value;
+            canvas.style.cursor = "crosshair";
+        });
+
+        textButton.addEventListener("click", () => {
+            currentTool = 'text';
+            canvas.style.cursor = "text";
+        });
+
+        eraserButton.addEventListener("click", () => {
+            currentTool = 'eraser';
+            ctx.globalCompositeOperation = 'destination-out';
+            canvas.style.cursor = "crosshair";
+        });
+
+        clearButton.addEventListener("click", () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            images = [];
+            drawings = [];
+            texts = [];
+            selectedImageIndex = -1;
+        });
+
+        addImageBtn.addEventListener("click", () => {
+            imageUpload.click();
+        });
+
+        colorPicker.addEventListener("input", () => {
+            ctx.strokeStyle = colorPicker.value;
+        });
+
+        lineWidth.addEventListener("input", () => {
+            ctx.lineWidth = lineWidth.value;
+        });
+
+        imageUpload.addEventListener("change", function(e) {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    addImage(event.target.result);
+                };
+                reader.readAsDataURL(this.files[0]);
+                this.value = '';
+            }
+        });
+
+        // Drawing functions
+        let currentDrawing = null;
+
+        function startDrawing(e) {
+            const pos = getPosition(e);
+
+            // Check if we clicked on an image
+            for (let i = images.length - 1; i >= 0; i--) {
+                if (images[i].containsPoint(pos.x, pos.y)) {
+                    selectedImageIndex = i;
+                    isDraggingImage = true;
+                    startX = pos.x;
+                    startY = pos.y;
+                    offsetX = pos.x - images[i].x;
+                    offsetY = pos.y - images[i].y;
+                    canvas.style.cursor = "grabbing";
+                    return;
+                }
+            }
+
+            // If not on an image, start drawing or adding text
+            if (currentTool === 'pen' || currentTool === 'eraser') {
+                isDrawing = true;
+                currentDrawing = {
+                    points: [pos],
+                    color: ctx.strokeStyle,
+                    width: ctx.lineWidth,
+                    tool: currentTool
+                };
+                e.preventDefault();
+            } else if (currentTool === 'text') {
+                const textContent = prompt("Enter text:");
+                if (textContent) {
+                    const text = new Text(
+                        textContent,
+                        pos.x,
+                        pos.y,
+                        colorPicker.value,
+                        lineWidth.value * 5
+                    );
+                    texts.push(text);
+                    redrawCanvas();
+                }
+            }
+        }
+
+        function draw(e) {
+            if (isDrawing && currentDrawing) {
+                const pos = getPosition(e);
+                currentDrawing.points.push(pos);
+
+                // Redraw everything to maintain proper layering
+                redrawCanvas();
+
+                // Draw the current path
+                ctx.save();
+                ctx.strokeStyle = currentDrawing.color;
+                ctx.lineWidth = currentDrawing.width;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                if (currentDrawing.tool === 'eraser') {
+                    ctx.globalCompositeOperation = 'destination-out';
+                } else {
+                    ctx.globalCompositeOperation = 'source-over';
+                }
+
+                ctx.beginPath();
+                ctx.moveTo(currentDrawing.points[0].x, currentDrawing.points[0].y);
+                for (let i = 1; i < currentDrawing.points.length; i++) {
+                    ctx.lineTo(currentDrawing.points[i].x, currentDrawing.points[i].y);
+                }
+                ctx.stroke();
+                ctx.restore();
+
+                e.preventDefault();
+            } else if (isDraggingImage && selectedImageIndex >= 0) {
+                const pos = getPosition(e);
+                const img = images[selectedImageIndex];
+                img.x = pos.x - offsetX;
+                img.y = pos.y - offsetY;
+                redrawCanvas();
+                e.preventDefault();
+            }
+        }
+
+        function stopDrawing() {
+            if (isDrawing && currentDrawing && currentDrawing.points.length > 1) {
+                drawings.push(new Drawing(
+                    [...currentDrawing.points],
+                    currentDrawing.color,
+                    currentDrawing.width,
+                    currentDrawing.tool
+                ));
+                currentDrawing = null;
+                isDrawing = false;
+            }
+            if (isDraggingImage) {
+                isDraggingImage = false;
+                canvas.style.cursor = "default";
+            }
+        }
+
+        function getPosition(e) {
+            let x, y;
+            if (e.type.includes('touch')) {
+                const touch = e.touches[0] || e.changedTouches[0];
+                const rect = canvas.getBoundingClientRect();
+                x = touch.clientX - rect.left;
+                y = touch.clientY - rect.top;
+            } else {
+                const rect = canvas.getBoundingClientRect();
+                x = e.clientX - rect.left;
+                y = e.clientY - rect.top;
+            }
+            return { x, y };
+        }
+
+        // Mouse events
+        canvas.addEventListener("mousedown", startDrawing);
+        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("mouseup", stopDrawing);
+        canvas.addEventListener("mouseout", stopDrawing);
+
+        canvas.addEventListener("mousemove", function(e) {
+            if (!isDrawing && !isDraggingImage) {
+                const pos = getPosition(e);
+                let hovering = false;
+                for (let i = images.length - 1; i >= 0; i--) {
+                    if (images[i].containsPoint(pos.x, pos.y)) {
+                        hovering = true;
+                        break;
+                    }
+                }
+                canvas.style.cursor = hovering ? "grab" :
+                                    (currentTool === 'pen' ? "crosshair" :
+                                    (currentTool === 'eraser' ? "crosshair" :
+                                    (currentTool === 'text' ? "text" : "default")));
+            }
+        });
+
+        // Zoom with Ctrl+Mousewheel on selected image
+        canvas.addEventListener("wheel", function(e) {
+            if (e.ctrlKey && selectedImageIndex >= 0) {
+                e.preventDefault();
+
+                const img = images[selectedImageIndex];
+                const pos = getPosition(e);
+
+                // Calculate scale factor
+                const delta = -e.deltaY;
+                const scaleFactor = delta > 0 ? 1.1 : 0.9;
+                const oldScale = img.scale;
+                img.scale *= scaleFactor;
+
+                // Limit scale
+                img.scale = Math.min(Math.max(0.1, img.scale), 10);
+
+                // Adjust position to zoom toward mouse
+                if (img.scale !== oldScale) {
+                    const mouseImgX = (pos.x - img.x) / oldScale;
+                    const mouseImgY = (pos.y - img.y) / oldScale;
+
+                    img.x = pos.x - mouseImgX * img.scale;
+                    img.y = pos.y - mouseImgY * img.scale;
+                }
+
+                redrawCanvas();
+            }
+        }, { passive: false });
+
+        // Touch support
+        canvas.addEventListener("touchstart", function(e) {
+            startDrawing(e);
+        });
+
+        canvas.addEventListener("touchmove", function(e) {
+            draw(e);
+            e.preventDefault();
+        });
+
+        canvas.addEventListener("touchend", function(e) {
+            stopDrawing();
+        });
+
+        // Drag and drop images
+        canvas.addEventListener("dragover", function(e) {
+            e.preventDefault();
+            canvas.style.cursor = "copy";
+        });
+
+        canvas.addEventListener("dragleave", function() {
+            canvas.style.cursor = "default";
+        });
+
+        canvas.addEventListener("drop", function(e) {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.match('image.*')) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    addImage(event.target.result);
+                };
+                reader.readAsDataURL(files[0]);
+            }
+            canvas.style.cursor = "default";
+        });
+
+        // Initialize
+        ctx.strokeStyle = colorPicker.value;
+        ctx.lineWidth = lineWidth.value;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        setupCanvas();
+        window.addEventListener('resize', setupCanvas);
+    </script>
 </body>
 </html>
