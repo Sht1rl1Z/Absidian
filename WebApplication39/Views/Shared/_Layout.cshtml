@@ -1,40 +1,43 @@
-﻿<html lang="en">
+﻿@using CoreHtmlToImage
+
+<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width" />
     <title>@ViewBag.Title</title>
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
         }
         #toolbar {
-            padding: 10px;
-            background-color: #f0f0f0;
-            display: flex;
-            gap: 10px;
+        padding: 10px;
+        background-color: #f0f0f0;
+        display: flex;
+        gap: 10px;
         }
         button {
-            padding: 8px 16px;
-            cursor: pointer;
+        padding: 8px 16px;
+        cursor: pointer;
         }
         #canvas-container {
-            flex: 1;
-            overflow: hidden;
-            position: relative;
+        flex: 1;
+        overflow: hidden;
+        position: relative;
         }
         #canvas {
-            background-color: white;
-            display: block;
-            position: absolute;
+        background-color: white;
+        display: block;
+        position: absolute;
         }
         #imageUpload {
-            display: none;
+        display: none;
         }
     </style>
+    <script type="text/javascript" src="rasterizeHTML.allinone.js"></script>
 </head>
 <body id="MainBody">
     <div id="toolbar">
@@ -43,7 +46,6 @@
         <button id="clearButton">Clear</button>
         <button id="eraserButton">Eraser</button>
         <button id="addImageBtn">Add Image</button>
-        <button id="saveAsImageButton">Save as Image</button>
         <button id="saveAsPDFButton">Save as PDF</button>
         <input type="color" id="colorPicker" value="#000000">
         <input type="range" id="lineWidth" min="1" max="50" value="2">
@@ -54,12 +56,12 @@
     </div>
     <div>
         @RenderBody()
-        
+
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script type="text/javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.js"></script>
+    
     <script>
-
-        
 
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
@@ -88,149 +90,154 @@
         let currentText = null;
 
         class CanvasImage {
-            constructor(img, x = 0, y = 0, scale = 1.0) {
-                this.img = img;
-                this.x = x;
-                this.y = y;
-                this.scale = scale;
-                this.width = img.width;
-                this.height = img.height;
-            }
+        constructor(img, x = 0, y = 0, scale = 1.0) {
+        this.img = img;
+        this.x = x;
+        this.y = y;
+        this.scale = scale;
+        this.width = img.width;
+        this.height = img.height;
+        }
 
-            draw(ctx) {
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                ctx.scale(this.scale, this.scale);
-                ctx.drawImage(this.img, 0, 0);
-                ctx.restore();
-            }
+        draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.scale(this.scale, this.scale);
+        ctx.drawImage(this.img, 0, 0);
+        ctx.restore();
+        }
 
-            containsPoint(x, y) {
-                const scaledWidth = this.width * this.scale;
-                const scaledHeight = this.height * this.scale;
-                return x >= this.x && x <= this.x + scaledWidth &&
-                       y >= this.y && y <= this.y + scaledHeight;
-            }
+        containsPoint(x, y) {
+        const scaledWidth = this.width * this.scale;
+        const scaledHeight = this.height * this.scale;
+        return x >= this.x && x <= this.x + scaledWidth &&
+        y >= this.y && y <= this.y + scaledHeight;
+        }
         }
 
         class Drawing {
-            constructor(points, color, width, tool) {
-                this.points = points;
-                this.color = color;
-                this.width = width;
-                this.tool = tool;
-            }
+        constructor(points, color, width, tool) {
+        this.points = points;
+        this.color = color;
+        this.width = width;
+        this.tool = tool;
+        }
 
-            draw(ctx) {
-                if (this.points.length < 2) return;
+        draw(ctx) {
+        if (this.points.length < 2) return;
 
-                ctx.save();
-                ctx.strokeStyle = this.color;
-                ctx.lineWidth = this.width;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
+        ctx.save();
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = this.width;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
 
-                if (this.tool === 'eraser') {
-                    ctx.globalCompositeOperation = 'destination-out';
-                } else {
-                    ctx.globalCompositeOperation = 'source-over';
-                }
+        if (this.tool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        } else {
+        ctx.globalCompositeOperation = 'source-over';
+        }
 
-                ctx.beginPath();
-                ctx.moveTo(this.points[0].x, this.points[0].y);
-                for (let i = 1; i < this.points.length; i++) {
-                    ctx.lineTo(this.points[i].x, this.points[i].y);
-                }
-                ctx.stroke();
-                ctx.restore();
-            }
+        ctx.beginPath();
+        ctx.moveTo(this.points[0].x, this.points[0].y);
+        for (let i = 1; i < this.points.length; i++) {
+        ctx.lineTo(this.points[i].x, this.points[i].y);
+        }
+        ctx.stroke();
+        ctx.restore();
+        }
         }
 
         class Text {
-            constructor(content, x, y, color, size) {
-                this.content = content;
-                this.x = x;
-                this.y = y;
-                this.color = color;
-                this.size = size;
-            }
+        constructor(content, x, y, color, size) {
+        this.content = content;
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.size = size;
+        }
 
-            draw(ctx) {
-                ctx.save();
-                ctx.fillStyle = this.color;
-                ctx.font = `${this.size}px Arial`;
-                ctx.fillText(this.content, this.x, this.y);
-                ctx.restore();
-            }
+        draw(ctx) {
+        ctx.save();
+        ctx.fillStyle = this.color;
+        ctx.font = `${this.size}px Arial`;
+        ctx.fillText(this.content, this.x, this.y);
+        ctx.restore();
+        }
         }
 
         function setupCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight - document.getElementById('toolbar').offsetHeight;
-            redrawCanvas();
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight - document.getElementById('toolbar').offsetHeight;
+        redrawCanvas();
         }
 
         function redrawCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw all images first
-            images.forEach(img => img.draw(ctx));
+        // Draw all images first
+        images.forEach(img => img.draw(ctx));
 
-            // Then draw all drawings
-            drawings.forEach(drawing => drawing.draw(ctx));
+        // Then draw all drawings
+        drawings.forEach(drawing => drawing.draw(ctx));
 
-            // Finally draw all texts
-            texts.forEach(text => text.draw(ctx));
+        // Finally draw all texts
+        texts.forEach(text => text.draw(ctx));
         }
 
         function addImage(imgSrc) {
-            const img = new Image();
-            img.onload = function() {
-                const canvasImg = new CanvasImage(
-                    img,
-                    (canvas.width - img.width) / 2,
-                    (canvas.height - img.height) / 2
-                );
-                images.push(canvasImg);
-                selectedImageIndex = images.length - 1;
-                redrawCanvas();
-            };
-            img.src = imgSrc;
+        const img = new Image();
+        img.onload = function() {
+        const canvasImg = new CanvasImage(
+        img,
+        (canvas.width - img.width) / 2,
+        (canvas.height - img.height) / 2
+        );
+        images.push(canvasImg);
+        selectedImageIndex = images.length - 1;
+        redrawCanvas();
+        };
+        img.src = imgSrc;
         }
 
         // Toolbar event listeners
         drawButton.addEventListener("click", () => {
-            currentTool = 'pen';
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.strokeStyle = colorPicker.value;
-            canvas.style.cursor = "crosshair";
+        currentTool = 'pen';
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = colorPicker.value;
+        canvas.style.cursor = "crosshair";
         });
 
         textButton.addEventListener("click", () => {
-            currentTool = 'text';
-            canvas.style.cursor = "text";
+        currentTool = 'text';
+        canvas.style.cursor = "text";
         });
 
         eraserButton.addEventListener("click", () => {
-            currentTool = 'eraser';
-            ctx.globalCompositeOperation = 'destination-out';
-            canvas.style.cursor = "crosshair";
+        currentTool = 'eraser';
+        ctx.globalCompositeOperation = 'destination-out';
+        canvas.style.cursor = "crosshair";
         });
 
         clearButton.addEventListener("click", () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            images = [];
-            drawings = [];
-            texts = [];
-            selectedImageIndex = -1;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        images = [];
+        drawings = [];
+        texts = [];
+        selectedImageIndex = -1;
         });
 
         addImageBtn.addEventListener("click", () => {
-            imageUpload.click();
+        imageUpload.click();
         });
 
         saveAsImageButton.addEventListener("click", () => {
-            const element = document.getElementById('MainBody');
+            
+        @{
+            var converter = new HtmlConverter();
+            var html = "aa";
+            
+        }
         });
 
         saveAsPDFButton.addEventListener("click", () => {
@@ -384,6 +391,8 @@
             }
             return { x, y };
         }
+
+        
 
         // Mouse events
         canvas.addEventListener("mousedown", startDrawing);
