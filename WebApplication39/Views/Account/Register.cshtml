@@ -1,0 +1,117 @@
+﻿@model WebApplication39.Models.UserRegModel
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f5f5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    .register-container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        width: 350px;
+        text-align: center;
+    }
+
+    h2 {
+        color: #333;
+        margin-bottom: 25px;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    label {
+        text-align: left;
+        font-weight: 600;
+        color: #555;
+        font-size: 14px;
+    }
+
+    input {
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border 0.3s;
+    }
+
+    input:focus {
+        border-color: #6c5ce7;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.2);
+    }
+
+    button {
+        background-color: #6c5ce7;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin-top: 10px;
+    }
+
+    button:hover {
+        background-color: #5649c0;
+    }
+
+    .login-link {
+        margin-top: 20px;
+        color: #666;
+        font-size: 14px;
+    }
+
+    .login-link a {
+        color: #6c5ce7;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .login-link a:hover {
+        text-decoration: underline;
+    }
+
+    .password-hint {
+        font-size: 12px;
+        color: #888;
+        margin-top: -10px;
+        text-align: left;
+    }
+</style>
+<div class="register-container">
+    <h2>Регистрация</h2>
+    @if (ViewBag.Error != null)
+    {
+        <div class="error"><p style="color: red">@ViewBag.Error</p></div>
+    }
+    <form method="post" action="Register">
+        <label for="Username">Имя пользователя:</label>
+        <input id="Username" name="Username" required placeholder="Придумайте имя пользователя" />
+
+        <label for="Password">Пароль:</label>
+        <input id="Password" name="Password" type="password" required placeholder="Не менее 10 символов" minlength="10" />
+        <div class="password-hint">Минимальная длина пароля - 10 символов</div>
+
+        <label for="ConfirmPassword">Подтвердите пароль:</label>
+        <input id="ConfirmPassword" name="ConfirmPassword" type="password" required placeholder="Повторите пароль" />
+
+        <button type="submit">Зарегистрироваться</button>
+    </form>
+
+    <div class="login-link">
+        Уже есть аккаунт? <a href="Login">Войдите</a>
+    </div>
+</div>

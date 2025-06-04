@@ -1,16 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
-namespace WebApplication39.Controllers
+namespace NovelBuff.Controllers
 {
     public class HomeController : Controller
     {
+        [Authorize]
         public IActionResult Index()
         {
+            ViewBag.Username = User.Identity?.Name;
             return View();
-        }
-        public IActionResult About() 
-        { 
-            return View(); 
         }
     }
 }

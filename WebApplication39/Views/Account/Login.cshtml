@@ -1,0 +1,112 @@
+﻿@model WebApplication39.Models.UserLogModel
+
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f5f5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    .login-container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        width: 350px;
+        text-align: center;
+    }
+
+    h2 {
+        color: #333;
+        margin-bottom: 25px;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    label {
+        text-align: left;
+        font-weight: 600;
+        color: #555;
+        font-size: 14px;
+    }
+
+    input {
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border 0.3s;
+    }
+
+    input:focus {
+        border-color: #4a90e2;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+    }
+
+    button {
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin-top: 10px;
+    }
+
+    button:hover {
+        background-color: #3a7bc8;
+    }
+
+    .register-link {
+        margin-top: 20px;
+        color: #666;
+        font-size: 14px;
+    }
+
+    .register-link a {
+        color: #4a90e2;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .register-link a:hover {
+        text-decoration: underline;
+    }
+</style>
+<div class="login-container">
+    <h2>Вход в систему</h2>
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="success"><p style="color: green">@TempData["SuccessMessage"]</p></div>
+    }
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="error"><p style="color: red">@ViewBag.Error</p></div>
+    }
+    <form action="Login" method="post">
+        <label for="Username">Имя пользователя:</label>
+        <input id="Username" name="Username" required placeholder="Введите имя пользователя" />
+
+        <label for="Password">Пароль:</label>
+        <input id="Password" name="Password" type="password" required placeholder="Введите пароль" />
+
+        <button type="submit">Войти</button>
+    </form>
+
+    <div class="register-link">
+        Нет аккаунта? <a href="Register">Зарегистрируйтесь</a>
+    </div>
+</div>
