@@ -13,7 +13,7 @@
         }
         #toolbar {
         padding: 10px;
-        background-color: #f0f0f0;
+            background-image: linear-gradient(49.62deg, #0b0706 32%, #6110bb, #0b0706);
         display: flex;
         gap: 10px;
         }
@@ -35,7 +35,62 @@
         display: none;
         }
 
-        #LOGOUTBTN {
+        .button {
+            background-image: linear-gradient(92.88deg, #455EB5 9.16%, #5643CC 43.89%, #673FD7 64.72%);
+            border-radius: 8px;
+            border-style: none;
+            box-sizing: border-box;
+            color: #FFFFFF;
+            cursor: pointer;
+            font-family: "Inter UI","SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Open Sans","Helvetica Neue",sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            height: 4rem;
+            padding: 0 1.6rem;
+            text-align: center;
+            text-shadow: rgba(0, 0, 0, 0.25) 0 3px 8px;
+            transition: all .5s;
+            touch-action: manipulation;
+        }
+
+            .button:hover {
+                box-shadow: rgba(80, 63, 205, 0.5) 0 1px 30px;
+                transition-duration: .1s;
+            }
+
+        #lineWidth {
+            position: relative;
+            display: block;
+            text-align: center;
+            font-size: 6em;
+            color: #999;
+            font-weight: 400;
+            margin-top: 30px;
+        }
+
+        .range {
+            width: 400px;
+            height: 15px;
+            -webkit-appearance: none;
+            background: #111;
+            outline: none;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 1);
+        }
+
+            .range::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                width: 15px;
+                height: 15px;
+                border-radius: 50%;
+                background: #0b0706;
+                cursor: pointer;
+                border: 4px solid #333;
+                box-shadow: -407px 0 0 400px #673FD7;
+            }
+
+        #LOGFORM {
             margin-left: auto
         }
     </style>
@@ -43,17 +98,17 @@
 </head>
 <body id="MainBody">
     <div id="toolbar">
-        <button id="drawButton">Draw</button>
-        <button id="textButton">Add Text</button>
-        <button id="clearButton">Clear</button>
-        <button id="eraserButton">Eraser</button>
-        <button id="addImageBtn">Add Image</button>
-        <button id="saveAsPDFButton">Save as PDF</button>
+        <button class="button" id="drawButton">Draw</button>
+        <button class="button" id="textButton">Add Text</button>
+        <button class="button" id="clearButton">Clear</button>
+        <button class="button" id="eraserButton">Eraser</button>
+        <button class="button" id="addImageBtn">Add Image</button>
+        <button class="button" id="saveAsPDFButton">Save as PDF</button>
         <input type="color" id="colorPicker" value="#000000">
-        <input type="range" id="lineWidth" min="1" max="50" value="2">
+        <input class="range" type="range" id="lineWidth" min="1" max="50" value="2">
         <input type="file" id="imageUpload" accept="image/*">
-        <form controller="Account" action="Logout" method="post">
-            <button id="LOGOUTBTN" type="submit">Выйти</button>
+        <form id="LOGFORM" controller="Account" action="Logout" method="post">
+            <button class="button" id="LOGOUTBTN" type="submit" >Выйти</button>
         </form>
     </div>
     <div id="canvas-container">
