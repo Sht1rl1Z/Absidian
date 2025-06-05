@@ -1,7 +1,4 @@
-﻿@{
-
-}
-<html lang="en">
+﻿<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width" />
     <title>@ViewBag.Title</title>
@@ -55,7 +52,9 @@
         <input type="color" id="colorPicker" value="#000000">
         <input type="range" id="lineWidth" min="1" max="50" value="2">
         <input type="file" id="imageUpload" accept="image/*">
-        <button id="LOGOUTBTN">Log out</button>
+        <form controller="Account" action="Logout" method="post">
+            <button type="submit" class="btn btn-link">Выйти</button>
+        </form>
     </div>
     <div id="canvas-container">
         <canvas id="canvas"></canvas>
@@ -68,7 +67,6 @@
     <script type="text/javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.js"></script>
     
     <script>
-
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
         const drawButton = document.getElementById("drawButton");

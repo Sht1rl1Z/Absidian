@@ -81,7 +81,7 @@ namespace WebApplication39.Controllers
             }
 
 
-            if (model.Password.Length < 10)
+            if (model.Password.Length < 2)
             {
                 ViewBag.Error = "Пароль должен быть не менее 6 символов";
                 return View(model);
@@ -105,12 +105,12 @@ namespace WebApplication39.Controllers
             TempData["SuccessMessage"] = "Регистрация прошла успешно! Теперь вы можете войти.";
             return RedirectToAction("Login");
         }
-
-        [HttpPost]
+        [HttpPost("Logout")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Login");
         }
     }
     public class User
